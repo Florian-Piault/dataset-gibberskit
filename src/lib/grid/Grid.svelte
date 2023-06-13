@@ -19,7 +19,7 @@
 			.map((_, x) => new Array(dimension).fill({}).map((_, y) => ({ x, y })));
 	});
 
-	const onDrag = (e: CustomEvent<{ item: Item; $event: DragEvent }>) => {
+	const onDrag = (e: CustomEvent<{ item: Item; event: DragEvent }>) => {
 		draggedItem = e.detail.item;
 	};
 
