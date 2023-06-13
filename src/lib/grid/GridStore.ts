@@ -1,5 +1,5 @@
 import { writable } from 'svelte/store';
-import type { Coordinates, Item } from './grid.type';
+import type { Coordinates, Item, Size } from './grid.type';
 
 function createGridStore() {
 	const { update, subscribe } = writable<Item[]>([
@@ -20,20 +20,25 @@ function createGridStore() {
 
 	const deleteItem = (id: string) => update((items) => items.filter((i) => i.id !== id));
 
-	const editCoords = (id: string, cell: Coordinates, size: number) =>
+	const editCoords = (id: string, cell: Coordinates) => {
 		update((items) => {
-			const item = items.find((i) => i.id === id);
-			if (item) {
-				item.x = cell.x;
-				item.y = cell.y;
-				// item.height = size;
-				// item.width = size;
-				return [...items, item];
-			}
-			return items;
+			return items.map((i) => {
+				if (i.id === id) return { ...i, ...cell };
+				return i;
+			});
 		});
+	};
 
-	return { addItem, deleteItem, editCoords, subscribe };
+	const editSize = (id: string, size: Size) => {
+		update((items) =>
+			items.map((i) => {
+				if (i.id === id) return { ...i, ...size };
+				else return i;
+			})
+		);
+	};
+
+	return { addItem, deleteItem, editCoords, editSize, subscribe };
 }
 
 export const unitWidth = writable(-1);

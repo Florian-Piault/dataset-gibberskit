@@ -24,7 +24,8 @@
 			dispatchEvent('resizeY', { movement: $event.movementY, direction });
 	};
 
-	const onMouseUp = ($event: MouseEvent) => {
+	const onMouseUp = (_: MouseEvent) => {
+		dispatchEvent('resizeOver');
 		document.body.classList.remove(dragging);
 		dragging = '';
 	};
