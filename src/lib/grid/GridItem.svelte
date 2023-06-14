@@ -5,10 +5,11 @@
 	import { gridStore, unitWidth } from './GridStore';
 	import { writable } from 'svelte/store';
 
+	export let item: Item;
+
 	const dragDispatch = createEventDispatcher<{ dragItem: { item: Item; event: DragEvent } }>();
 	const blockClass =
 		'absolute h-4 w-4 rounded border border-slate-400 bg-gray-50 hover:fill-neutral-200 hover:brightness-110';
-	export let item: Item;
 	const isGhost = writable<boolean>(false);
 
 	const onDrag = (event: DragEvent) => {

@@ -5,18 +5,23 @@
 	import type { Coordinates, Item } from './grid.type';
 
 	export const dimension = 12;
-	const DRAG_HOVER_CLASS = 'bg-gray-200';
+	const hoveredClasses = [
+		'bg-slate-300',
+		'dark:bg-slate-500',
+		'border-slate-300',
+		'dark:border-slate-500'
+	];
 	let clientWidth = -1;
+	let draggedItem: Item | undefined;
+	let coordinates: Coordinates[][] = [];
 
 	$: unitWidth.set(Math.round(clientWidth / dimension));
 	$: style = `height: ${$unitWidth}px; width: ${$unitWidth}px`;
 
-	let draggedItem: Item | undefined;
-	let coordinates: Coordinates[][] = [];
 	onMount(() => {
 		coordinates = new Array(dimension)
 			.fill({})
-			.map((_, x) => new Array(dimension).fill({}).map((_, y) => ({ x, y })));
+			.map((_, x) => new Array(dimension * 2).fill({}).map((_, y) => ({ x, y })));
 	});
 
 	const onDrag = (e: CustomEvent<{ item: Item; event: DragEvent }>) => {
@@ -32,20 +37,38 @@
 		}
 	};
 
-	const onDragEnter = ($event: DragEvent) => {
-		if (draggedItem) ($event.target as HTMLDivElement).classList.add(DRAG_HOVER_CLASS);
+	const onDragEnter = ($event: DragEvent, cell: Coordinates) => {
+		if (draggedItem) {
+			const widthSpan = Math.round(draggedItem.width / $unitWidth) - 1;
+			const heightSpan = Math.round(draggedItem.height / $unitWidth) - 1;
+			const xStart = cell.x;
+			const yStart = cell.y;
+
+			setTimeout(() => {
+				for (let x = xStart; x <= xStart + widthSpan; x++)
+					for (let y = yStart; y <= yStart + heightSpan; y++) {
+						const el = document.querySelector(`[data-cell-x="${x}"][data-cell-y="${y}"]`);
+						if (el) el.classList.add(...hoveredClasses);
+					}
+			}, 0);
+		}
 	};
 
-	const onDragLeave = ($event: DragEvent) => {
-		if (draggedItem) ($event.target as HTMLDivElement).classList.remove(DRAG_HOVER_CLASS);
+	const removeHoverClass = () => {
+		const hoveredElements = document.getElementsByClassName(hoveredClasses[0]);
+		if (hoveredElements) {
+			Array.from(hoveredElements).forEach((el) => el.classList.remove(...hoveredClasses));
+		}
 	};
+
+	const onDragLeave = ($event: DragEvent) => removeHoverClass();
 
 	const dropItem = ($event: DragEvent, cell: Coordinates) => {
 		if (draggedItem) {
 			gridStore.editCoords(draggedItem.id, { ...draggedItem, x: cell.x, y: cell.y });
 			draggedItem = undefined;
 		}
-		($event.target as HTMLDivElement).classList.remove(DRAG_HOVER_CLASS);
+		removeHoverClass();
 	};
 </script>
 
@@ -60,7 +83,9 @@
 					{#each row as cell}
 						<div
 							class="border border-slate-100 dark:border-slate-700"
-							on:dragenter={onDragEnter}
+							data-cell-x={cell.x}
+							data-cell-y={cell.y}
+							on:dragenter={($event) => onDragEnter($event, cell)}
 							on:dragleave={onDragLeave}
 							on:dragover={allowDrop}
 							on:drop={($event) => dropItem($event, cell)}
